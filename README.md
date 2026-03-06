@@ -16,6 +16,7 @@ A sleek audio visualizer that turns your music into floating light bars. Revived
 - **Adjustable bars**: count, height, opacity
 - **Draggable window** when needed
 - **Separate control panel** for easy adjustments
+- **Record visualizations** and share with friends!
 
 ## Controls 🎮
 | Control | Function |
