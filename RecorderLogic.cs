@@ -1,8 +1,6 @@
 using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Windows.Forms;
-using System.IO;
 using NAudio.Wave;
 using SharpAvi;
 using SharpAvi.Codecs;
@@ -15,20 +13,18 @@ namespace NekoBeats
         private bool isRecording = false;
         private int frameCount = 0;
         private string outputPath;
-        private string tempAudioPath;
         
         public int RecordingWidth { get; set; } = 1920;
         public int RecordingHeight { get; set; } = 1080;
         public int RecordingFPS { get; set; } = 60;
         public int MaxDurationSeconds { get; set; } = 300;
         
-        private WasapiLoopbackCapture audioCapture;
-        private WaveFileWriter audioFileWriter;
         private Bitmap frameBuffer;
         private Graphics frameGraphics;
         private VisualizerForm visualizerForm;
         private VisualizerLogic visualizerLogic;
         private AviWriter aviWriter;
+        private IAviVideoStream videoStream;
         
         public RecorderLogic(VisualizerForm form)
         {
@@ -49,25 +45,19 @@ namespace NekoBeats
                 outputPath = outputFilePath;
                 frameCount = 0;
                 
-                // Create temp audio file
-                string tempDir = Path.Combine(Path.GetTempPath(), "NekoBeatsRecording");
-                Directory.CreateDirectory(tempDir);
-                tempAudioPath = Path.Combine(tempDir, Guid.NewGuid().ToString() + ".wav");
-                
                 // Initialize AVI writer
-                aviWriter = new AviWriter(outputPath)
-                {
-                    FramesPerSecond = fps,
-                    Width = width,
-                    Height = height
-                };
+                aviWriter = new AviWriter(outputPath);
+                
+                // Add video stream with MotionJpeg codec
+                videoStream = aviWriter.AddVideoStream();
+                videoStream.Width = width;
+                videoStream.Height = height;
+                videoStream.FramesPerSecond = fps;
+                videoStream.Codec = KnownFourCCs.Codecs.MotionJpeg;
                 
                 // Initialize frame buffer
-                frameBuffer = new Bitmap(RecordingWidth, RecordingHeight, PixelFormat.Format32bppRgb);
+                frameBuffer = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
                 frameGraphics = Graphics.FromImage(frameBuffer);
-                
-                // Start audio capture
-                InitializeAudioCapture();
                 
                 isRecording = true;
                 return true;
@@ -75,6 +65,7 @@ namespace NekoBeats
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to start recording: {ex.Message}", "Recording Error");
+                aviWriter?.Dispose();
                 return false;
             }
         }
@@ -83,13 +74,6 @@ namespace NekoBeats
         {
             if (!isRecording) return;
             isRecording = false;
-            
-            try
-            {
-                audioCapture?.StopRecording();
-                audioFileWriter?.Dispose();
-            }
-            catch { }
         }
         
         public void CaptureFrame()
@@ -108,17 +92,8 @@ namespace NekoBeats
                 frameGraphics.Clear(Color.Magenta);
                 visualizerLogic.Render(frameGraphics, new Size(RecordingWidth, RecordingHeight));
                 
-                // Write frame to AVI
-                BitmapData bmpData = frameBuffer.LockBits(
-                    new Rectangle(0, 0, frameBuffer.Width, frameBuffer.Height),
-                    ImageLockMode.ReadOnly,
-                    PixelFormat.Format32bppRgb);
-                
-                byte[] frameData = new byte[Math.Abs(bmpData.Stride) * frameBuffer.Height];
-                System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, frameData, 0, frameData.Length);
-                frameBuffer.UnlockBits(bmpData);
-                
-                aviWriter.AddFrame(frameData);
+                // Write frame to AVI video stream
+                videoStream.WriteFrame(true, frameBuffer, 0, frameBuffer.Width * frameBuffer.Height * 4);
                 frameCount++;
             }
             catch (Exception ex)
@@ -128,39 +103,15 @@ namespace NekoBeats
             }
         }
         
-        private void InitializeAudioCapture()
-        {
-            try
-            {
-                audioCapture = new WasapiLoopbackCapture();
-                audioFileWriter = new WaveFileWriter(tempAudioPath, audioCapture.WaveFormat);
-                audioCapture.DataAvailable += (s, e) =>
-                {
-                    if (isRecording)
-                        audioFileWriter.Write(e.Buffer, 0, e.BytesRecorded);
-                };
-                audioCapture.StartRecording();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Audio capture failed: {ex.Message}", "Audio Error");
-            }
-        }
-        
         private void FinalizeRecording()
         {
             try
             {
-                aviWriter?.Close();
-                MessageBox.Show($"Recording saved to:\n{outputPath}", "Success!");
-                
-                // Clean up temp audio file
-                try
+                if (aviWriter != null)
                 {
-                    if (File.Exists(tempAudioPath))
-                        File.Delete(tempAudioPath);
+                    aviWriter.Close();
+                    MessageBox.Show($"Recording saved to:\n{outputPath}", "Success!");
                 }
-                catch { }
             }
             catch (Exception ex)
             {
@@ -178,16 +129,7 @@ namespace NekoBeats
             StopRecording();
             frameGraphics?.Dispose();
             frameBuffer?.Dispose();
-            audioCapture?.Dispose();
-            audioFileWriter?.Dispose();
             aviWriter?.Dispose();
-            
-            try
-            {
-                if (File.Exists(tempAudioPath))
-                    File.Delete(tempAudioPath);
-            }
-            catch { }
         }
     }
 }
