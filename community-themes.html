@@ -589,12 +589,25 @@
           <textarea id="description" placeholder="Describe your theme..." maxlength="200"></textarea>
         </div>
         <div class="form-group">
-          <label for="nbpFile">NBP File *</label>
-          <label for="nbpFile" class="file-input-label">
+          <label>File Type</label>
+          <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+            <label style="flex: 1; margin: 0;">
+              <input type="radio" name="fileType" value="nbp" checked style="margin-right: 8px;">
+              <span>Visualizer Theme (.nbp)</span>
+            </label>
+            <label style="flex: 1; margin: 0;">
+              <input type="radio" name="fileType" value="nbbar" style="margin-right: 8px;">
+              <span>Bar Preset (.nbbar)</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="themeFile">File *</label>
+          <label for="themeFile" class="file-input-label">
             <i class="fas fa-file-upload"></i>
             <div>Click to upload or drag & drop</div>
           </label>
-          <input type="file" id="nbpFile" accept=".nbp" required onchange="updateFileName()">
+          <input type="file" id="themeFile" accept=".nbp,.nbbar" required onchange="updateFileName()">
         </div>
         <button type="submit" class="form-submit" id="submitBtn">Upload Theme</button>
       </form>
@@ -621,7 +634,7 @@
   </div>
 
   <script>
-    // YOUR VERCEL DOMAIN - update this
+    // if forking, DO NOT use my API. Host your own.
     const API_BASE = 'https://nbp.catsdevs.online/api/themes';
 
     let themes = [];
@@ -696,10 +709,20 @@
       const username = document.getElementById('username').value;
       const name = document.getElementById('themeName').value;
       const description = document.getElementById('description').value;
-      const file = document.getElementById('nbpFile').files[0];
+      const file = document.getElementById('themeFile').files[0];
+      const fileType = document.querySelector('input[name="fileType"]:checked').value;
 
       if (!file) {
-        showToast('Select an NBP file', 'error');
+        showToast('Select a file', 'error');
+        return;
+      }
+
+      // Validate file extension
+      const validExtensions = { nbp: '.nbp', nbbar: '.nbbar' };
+      const hasValidExtension = file.name.endsWith(validExtensions[fileType]);
+      
+      if (!hasValidExtension) {
+        showToast(`File must be a ${validExtensions[fileType]} file`, 'error');
         return;
       }
 
@@ -714,7 +737,7 @@
           const response = await fetch(API_BASE, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, name, description, fileBuffer: buffer })
+            body: JSON.stringify({ username, name, description, fileBuffer: buffer, fileType })
           });
           const data = await response.json();
           if (data.success) {
@@ -743,7 +766,11 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = name + '.nbp';
+        
+        // Detect file type - default to .nbp if unknown
+        const fileType = blob.type.includes('nbbar') ? 'nbbar' : 'nbp';
+        a.download = name + '.' + fileType;
+        
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

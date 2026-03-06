@@ -593,8 +593,47 @@ namespace NekoBeats
             };
             exitBtn.Click += (s, e) => Environment.Exit(0);
             
+            var loadBarBtn = new Button
+            {
+                Text = "Load Bar",
+                Location = new Point(340, 10),
+                Size = new Size(90, 30),
+                BackColor = Color.FromArgb(50, 50, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            loadBarBtn.Click += (s, e) =>
+            {
+                var dialog = new OpenFileDialog { Filter = "NekoBeats Bar Preset (*.nbbar)|*.nbbar" };
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    visualizer.Logic.LoadBarPreset(dialog.FileName);
+                }
+            };
+            
+            var saveBarBtn = new Button
+            {
+                Text = "Save Bar",
+                Location = new Point(440, 10),
+                Size = new Size(90, 30),
+                BackColor = Color.FromArgb(50, 50, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            saveBarBtn.Click += (s, e) =>
+            {
+                var dialog = new SaveFileDialog { Filter = "NekoBeats Bar Preset (*.nbbar)|*.nbbar" };
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    visualizer.Logic.barPreset.Name = Path.GetFileNameWithoutExtension(dialog.FileName);
+                    visualizer.Logic.SaveBarPreset(dialog.FileName);
+                }
+            };
+            
             buttonPanel.Controls.Add(saveBtn);
             buttonPanel.Controls.Add(loadBtn);
+            buttonPanel.Controls.Add(loadBarBtn);
+            buttonPanel.Controls.Add(saveBarBtn);
             buttonPanel.Controls.Add(exitBtn);
             
             mainPanel.Controls.Add(buttonPanel);
