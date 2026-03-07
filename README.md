@@ -18,6 +18,7 @@ A sleek audio visualizer that turns your music into floating light bars. Revived
 - **Adjustable bars**: count, height, opacity
 - **Draggable window** when needed
 - **Separate control panel** for easy adjustments
+- **Custom bar presets** (shapes, animations, colors)
 
 ## Controls 🎮
 
@@ -42,6 +43,34 @@ Want to record your NekoBeats visualizations? We recommend using **[OBS Studio](
 5. Click **Start Recording** and enjoy!
 
 OBS handles video compression, audio-video sync, and quality settings - way better than anything we could build in-app.
+
+## Bar Presets 🎨
+
+Customize bar shapes, animations, and colors with `.nbbar` preset files!
+
+**Features:**
+- **Bar Shapes**: Rectangle, Circle, Triangle, Rounded, Gradient
+- **Animations**: Sine, Cosine, Square, Sawtooth, None
+- **Custom Colors**: Define color arrays that cycle through bars
+- **Beat Sync**: Bars pulse with the beat
+- **Glow Effects**: Add glow intensity to bars
+
+**Example preset (save as `neon.nbbar`):**
+```json
+{
+  "name": "Neon Vibes",
+  "barShape": "Circle",
+  "barWidth": 30,
+  "barHeight": 400,
+  "colors": ["#FF0080", "#00FFFF", "#FFFF00"],
+  "animationType": "Sine",
+  "animationSpeed": 0.8,
+  "beatSync": true,
+  "glow": 2.5
+}
+```
+
+Load presets in NekoBeats via **Load Bar** button in the control panel. Share your creations on the [Community Themes](https://catsdevs.online/NekoBeats-V2/community-themes.html) page!
 
 ## Installation ⚡
 
@@ -79,6 +108,7 @@ NekoBeats captures your system audio output using NAudio, performs FFT analysis 
 - ✅ **Modern UI** (separate control panel)
 - ✅ **Single EXE** (no dependencies needed)
 - ✅ **Draggable window** (move visualizer around)
+- ✅ **Custom bar presets** (shapes, animations, colors)
 
 ## Troubleshooting 🔧
 

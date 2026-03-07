@@ -52,7 +52,7 @@ namespace NekoBeats
         public float circleRadius = 200f;
         
         // Bar Preset System
-        public BarPreset barPreset { get; private set; } = BarPreset.GetDefault();
+        public BarPreset barPreset { get; private set; } = null;
         private System.Diagnostics.Stopwatch animationTimer = new System.Diagnostics.Stopwatch();
         
         // Enums
@@ -413,6 +413,18 @@ namespace NekoBeats
         }
         
         private void DrawBarVisualizer(Graphics g, Size clientSize)
+        {
+            if (barPreset != null)
+            {
+                DrawBarVisualizerWithPreset(g, clientSize);
+            }
+            else
+            {
+                DrawBarVisualizerDefault(g, clientSize);
+            }
+        }
+
+        private void DrawBarVisualizerDefault(Graphics g, Size clientSize)
         {
             float barWidth = (float)clientSize.Width / barCount;
             float heightMultiplier = barHeight / 100f;
@@ -792,7 +804,6 @@ namespace NekoBeats
             }
             bloomBuffer?.Dispose();
             bloomGraphics?.Dispose();
-            animationTimer?.Dispose();
         }
 
         private struct Particle 
