@@ -414,35 +414,7 @@ namespace NekoBeats
         
         private void DrawBarVisualizer(Graphics g, Size clientSize)
         {
-            float barWidth = (float)clientSize.Width / barCount;
-            float heightMultiplier = barHeight / 100f;
-            
-            for (int i = 0; i < barCount; i++)
-            {
-                float h = smoothedBarValues[i] * (clientSize.Height * heightMultiplier);
-                if (h < 2) h = 2;
-                
-                Color barColorToUse;
-                if (rainbowBars)
-                {
-                    // Map height to rainbow colors (red = low, purple = high)
-                    float intensity = Math.Min(1.0f, h / (clientSize.Height * 0.5f));
-                    float hue = intensity * 300; // 0 = red, 300 = purple
-                    barColorToUse = ColorFromHSV(hue, 1.0f, 1.0f);
-                }
-                else
-                {
-                    barColorToUse = barColor;
-                }
-                
-                float x = i * barWidth;
-                float y = clientSize.Height - h;
-                
-                using (SolidBrush brush = new SolidBrush(barColorToUse))
-                {
-                    g.FillRectangle(brush, x, y, barWidth - barSpacing, h);
-                }
-            }
+            DrawBarVisualizerWithPreset(g, clientSize);
         }
         
         private void DrawCircleVisualizer(Graphics g, Size clientSize)
